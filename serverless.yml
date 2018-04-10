@@ -1,0 +1,187 @@
+# Welcome to Serverless!
+#
+# This file is the main config file for your service.
+# It's very minimal at this point and uses default values.
+# You can always add more config options for more control.
+# We've included some commented out config examples here.
+# Just uncomment any of them to get that config option.
+#
+# For full config options, check the docs:
+#    docs.serverless.com
+#
+# Happy Coding!
+
+service: amiberry-api
+
+# You can pin your service to only deploy with a specific Serverless version
+# Check out our docs for more details
+# frameworkVersion: "=X.X.X"
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: eu-west-2
+  logRetentionInDays: 1
+  iamRoleStatements:
+      - Effect: Allow
+        Action:
+        - dynamodb:DescribeTable
+        - dynamodb:BatchGetItem
+        - dynamodb:GetItem
+        - dynamodb:GetRecords
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:BatchWriteItem
+        - dynamodb:DeleteItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        Resource:
+        - Fn::GetAtt: [ GamesDynamoDbTable, Arn ]
+        - Fn::GetAtt: [ VariantsDynamoDbTable, Arn ]
+    # - Effect: Allow
+    #   Action:
+    #   - logs:CreateLogGroup
+    #   - logs:CreateLogStream
+    #   - logs:PutLogEvents
+    #   Resource: arn:aws:logs:*:*:*
+  # environment:
+  #   table_name: ${self:custom.tableName}
+
+
+# you can add statements to the Lambda function's IAM Role here
+
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+# you can add packaging information here
+package:
+#  include:
+#    - include-me.py
+#    - include-me-dir/**
+ exclude:
+   - node_modules/**
+   - .venv/**
+   - .env
+   - .vscode
+
+functions:
+  post:
+    handler: handler.post
+    events:
+      - http:
+          path: whdload
+          method: post
+          cors: true
+  get:
+    handler: handler.get
+    events:
+      - http:
+          path: whdload
+          method: get
+          cors: true
+#      - s3: ${env:BUCKET}
+#      - schedule: rate(10 minutes)
+#      - sns: greeter-topic
+#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
+#      - alexaSkill
+#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
+#      - iot:
+#          sql: "SELECT * FROM 'some_topic'"
+#      - cloudwatchEvent:
+#          event:
+#            source:
+#              - "aws.ec2"
+#            detail-type:
+#              - "EC2 Instance State-change Notification"
+#            detail:
+#              state:
+#                - pending
+#      - cloudwatchLog: '/aws/lambda/hello'
+#      - cognitoUserPool:
+#          pool: MyUserPool
+#          trigger: PreSignUp
+
+#    Define function environment variables here
+#    environment:
+#      variable2: value2
+
+# you can add CloudFormation resource templates here
+resources:
+ Resources:
+    GamesDynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName:
+          amiberry-games
+        AttributeDefinitions:
+        - AttributeName: uuid
+          AttributeType: S
+        KeySchema:
+        - AttributeName: uuid
+          KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    VariantsDynamoDbTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName:
+          amiberry-variants
+        AttributeDefinitions:
+        - AttributeName: sha1
+          AttributeType: S
+        KeySchema:
+        - AttributeName: sha1
+          KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+    # LambdaRole:
+    #   Type: AWS::IAM::Role
+    #   Properties:
+    #     RoleName:
+    #       AmiberryApiLambdaRole
+    #     AssumeRolePolicyDocument:
+    #       Version: '2012-10-17'
+    #       Statement:
+    #       - Effect: Allow
+    #         Principal:
+    #           Service: lambda.amazonaws.com
+    #         Action: sts:AssumeRole
+    # LambdaPolicy:
+    #     Type: AWS::IAM::Policy
+    #     Properties:
+    #       PolicyName: AmiberryApiLamdbdaPolicy
+    #       Roles:
+    #       - Ref: LambdaRole
+    #       PolicyDocument:
+    #         Version: '2012-10-17'
+    #         Statement:
+    #         - Effect: Allow
+    #           Action:
+    #           - dynamodb:DescribeTable
+    #           - dynamodb:ListTables
+    #           - dynamodb:PutItem
+    #           Resource:
+    #           - Fn::GetAtt: [ DynamoDbTable, Arn ]
+    #         - Effect: Allow
+    #           Action:
+    #           - logs:CreateLogGroup
+    #           - logs:CreateLogStream
+    #           - logs:PutLogEvents
+    #           Resource: arn:aws:logs:*:*:*
+
+#  Outputs:
+#     NewOutput:
+#       Description: "Description for the output"
+#       Value: "Some output value"
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
