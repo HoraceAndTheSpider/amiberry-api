@@ -39,12 +39,12 @@ provider:
         Resource:
         - Fn::GetAtt: [ GamesDynamoDbTable, Arn ]
         - Fn::GetAtt: [ VariantsDynamoDbTable, Arn ]
-    # - Effect: Allow
-    #   Action:
-    #   - logs:CreateLogGroup
-    #   - logs:CreateLogStream
-    #   - logs:PutLogEvents
-    #   Resource: arn:aws:logs:*:*:*
+      - Effect: Allow
+        Action:
+        - logs:CreateLogGroup
+        - logs:CreateLogStream
+        - logs:PutLogEvents
+        Resource: arn:aws:logs:*:*:*
   # environment:
   #   table_name: ${self:custom.tableName}
 
@@ -62,14 +62,16 @@ package:
 #    - include-me.py
 #    - include-me-dir/**
   exclude:
-    - node_modules/**
     - .venv/**
+    - .vscode/**
+    - node_modules/**
+    - data_converters/**
+    - data_importers/**
+    - tests/**
     - .env
-    - .vscode
-    - backup
-    - data_converters
-    - data_importers
-    - tests
+    - backup_db.py
+    - game_backup_*.json
+    - variant_backup_*.json
 
 functions:
   post:
@@ -121,40 +123,40 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    LambdaRole:
-      Type: AWS::IAM::Role
-      Properties:
-        RoleName:
-          AmiberryApiLambdaRole
-        AssumeRolePolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-    LambdaPolicy:
-        Type: AWS::IAM::Policy
-        Properties:
-          PolicyName: AmiberryApiLamdbdaPolicy
-          Roles:
-          - Ref: LambdaRole
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-            - Effect: Allow
-              Action:
-              - dynamodb:DescribeTable
-              - dynamodb:ListTables
-              - dynamodb:PutItem
-              Resource:
-              - Fn::GetAtt: [ DynamoDbTable, Arn ]
-            - Effect: Allow
-              Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:PutLogEvents
-              Resource: arn:aws:logs:*:*:*
+    # LambdaRole:
+    #   Type: AWS::IAM::Role
+    #   Properties:
+    #     RoleName:
+    #       AmiberryApiLambdaRole
+    #     AssumeRolePolicyDocument:
+    #       Version: '2012-10-17'
+    #       Statement:
+    #       - Effect: Allow
+    #         Principal:
+    #           Service: lambda.amazonaws.com
+    #         Action: sts:AssumeRole
+    # LambdaPolicy:
+    #     Type: AWS::IAM::Policy
+    #     Properties:
+    #       PolicyName: AmiberryApiLamdbdaPolicy
+    #       Roles:
+    #       - Ref: LambdaRole
+    #       PolicyDocument:
+    #         Version: '2012-10-17'
+    #         Statement:
+    #         - Effect: Allow
+    #           Action:
+    #           - dynamodb:DescribeTable
+    #           - dynamodb:ListTables
+    #           - dynamodb:PutItem
+    #           Resource:
+    #           - Fn::GetAtt: [ DynamoDbTable, Arn ]
+    #         - Effect: Allow
+    #           Action:
+    #           - logs:CreateLogGroup
+    #           - logs:CreateLogStream
+    #           - logs:PutLogEvents
+    #           Resource: arn:aws:logs:*:*:*
 
 #  Outputs:
 #     NewOutput:
