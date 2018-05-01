@@ -1,8 +1,10 @@
-import os
-import json
-import posixpath
 import hashlib
+import json
+import os
+import posixpath
 import urllib
+import uuid
+
 import lhafile
 
 ROOT_DIR = os.path.dirname(__file__)
@@ -10,7 +12,14 @@ JSON_OUTPUT_NAME = 'retroplay_index.json'
 JSON_OUTPUT_PATH = os.path.join(ROOT_DIR, JSON_OUTPUT_NAME)
 HDD_PREFIX = 'DH0'
 VARIANT_PREFIX = ['WHDLoad']
+SHA1_URL = 'http://sha1.fengestad.no/'
 RETROPLAY_ROOT = 'E:\\Emulation\\retroplay\\Games'
+
+
+def generate_variant_uuid(file_sha1s):
+    file_sha1s_joined = "/".join(sorted(file_sha1s))
+    sha1_url = SHA1_URL + file_sha1s_joined
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, str(sha1_url)))
 
 
 def get_file_metadata(archive, file):
@@ -69,11 +78,21 @@ def parse_file(file_path):
             lha_sha1 = get_sha1(archive_file.read())
 
         files_metadata = read_archive(file_path)
+
+        file_sha1s = []
+        for file in files_metadata:
+            if not file.get('sha1'):
+                continue
+
+            file_sha1s.append(file['sha1'])
+
+        variant_uuid = generate_variant_uuid(file_sha1s)
         dh0_sha1 = get_dh0_sha1(files_metadata)
 
         filename = os.path.basename(file_path)
         _, *variant_parts = os.path.splitext(filename)[0].split('_')
         archive_metadata = {
+            'uuid': variant_uuid,
             'filename': filename,
             'variant_name': ', '.join(VARIANT_PREFIX + variant_parts),
             'sha1': lha_sha1,
